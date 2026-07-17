@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
+# Il Token viene letto dalle variabili d'ambiente di Railway
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -18,12 +19,22 @@ async def cerca(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"🔍 Sto cercando '{query}' per te...")
     
     try:
-        # Creiamo lo scraper che simula un browser reale
-        scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True})
+        scraper = cloudscraper.create_scraper()
         url = f"https://www.vinted.it/catalog?search_text={query}&order=newest_first"
         
-        # Effettuiamo la richiesta
-        risposta = scraper.get(url)
+        # Header ottimizzati per simulare un browser e superare il blocco 406
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Referer': 'https://www.vinted.it/',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-User': '?1'
+        }
+        
+        risposta = scraper.get(url, headers=headers)
         
         if risposta.status_code != 200:
             await update.message.reply_text(f"Errore: Vinted ha risposto con codice {risposta.status_code}.")
@@ -33,18 +44,16 @@ async def cerca(update: Update, context: ContextTypes.DEFAULT_TYPE):
         prodotti = soup.select('div[data-testid="item-box"]')
         
         if not prodotti:
-            await update.message.reply_text("Nessun prodotto trovato. Vinted potrebbe aver cambiato la struttura della pagina.")
+            await update.message.reply_text("Nessun prodotto trovato. Vinted ha bloccato il contenuto.")
             return
 
-        # Inviamo i risultati
+        # Invio dei primi 3 risultati
         for prodotto in prodotti[:3]:
             titolo = prodotto.select_one('h3')
             link_tag = prodotto.select_one('a')
-            
             if titolo and link_tag:
                 link = "https://www.vinted.it" + link_tag.get('href')
-                msg = f"✅ Trovato: {titolo.text.strip()}\n🔗 {link}"
-                await update.message.reply_text(msg)
+                await update.message.reply_text(f"✅ Trovato: {titolo.text.strip()}\n🔗 {link}")
                 
     except Exception as e:
         await update.message.reply_text(f"Errore tecnico: {str(e)}")
@@ -58,3 +67,4 @@ if __name__ == '__main__':
         application.add_handler(CommandHandler('cerca', cerca))
         print("Bot in ascolto con CloudScraper...")
         application.run_polling()
+        
