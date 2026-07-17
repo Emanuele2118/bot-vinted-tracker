@@ -8,7 +8,8 @@ from telegram import Bot
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID") # Sostituisci con il tuo ID numerico
 bot = Bot(token=TOKEN)
-
+# Aggiungi questa riga subito dopo la definizione del bot (riga 10 circa)
+bot.send_message(chat_id=os.environ.get("CHAT_ID"), text="Bot avviato con successo!")
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
