@@ -38,4 +38,7 @@ def controlla_vinted():
 
 # Eseguiamo il controllo
 if __name__ == "__main__":
-    controlla_vinted()
+    while True:
+        controlla_vinted()
+        print("Aspetto 1 ora prima del prossimo controllo...")
+        time.sleep(3600)  # Aspetta 3600 secondi (1 ora)
