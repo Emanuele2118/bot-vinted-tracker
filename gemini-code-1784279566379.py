@@ -6,7 +6,7 @@ from telegram import Bot
 
 # Configurazione Telegram
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
-CHAT_ID = "8378019653" # Sostituisci con il tuo ID numerico
+CHAT_ID = os.environ.get("CHAT_ID") # Sostituisci con il tuo ID numerico
 bot = Bot(token=TOKEN)
 
 headers = {
