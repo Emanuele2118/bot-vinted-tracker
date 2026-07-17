@@ -1,44 +1,40 @@
 import requests
 from bs4 import BeautifulSoup
 import time
+import os
+from telegram import Bot
 
-# I "vestiti" da browser per non farti bloccare subito
+# Configurazione Telegram
+TOKEN = os.environ.get("TELEGRAM_TOKEN")
+CHAT_ID = "8532956759:AAHlBwdUsTMgpOtfmx9xuwttzD-UmNoPcQk" # Sostituisci con il tuo ID numerico
+bot = Bot(token=TOKEN)
+
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
 
-# Il tuo link di Vinted
 url = "https://www.vinted.it/catalog?search_text=Vans%20Sk8-Mid&search_id=1109702021&size_ids[]=784&page=1"
 
 def controlla_vinted():
     print("Sto interrogando Vinted...")
     try:
         risposta = requests.get(url, headers=headers)
-        
         if risposta.status_code == 200:
             soup = BeautifulSoup(risposta.text, 'html.parser')
-            # Cerchiamo i contenitori degli articoli
             prodotti = soup.find_all('div', class_='feed-item')
             
-            print(f"Trovati {len(prodotti)} prodotti nella pagina.")
-            
             for prodotto in prodotti:
-                # Nota: le classi di Vinted cambiano spesso, se non stampa nulla
-                # dovremo aggiornare il nome della classe qui sotto
-                prezzo = prodotto.find('h3', class_='c-box__title') 
+                prezzo = prodotto.find('h3', class_='c-box__title')
                 if prezzo:
-                    print(f"Prezzo trovato: {prezzo.text.strip()}")
-                else:
-                    print("Prezzo non leggibile in questo annuncio.")
+                    messaggio = f"Nuovo prodotto trovato! Prezzo: {prezzo.text.strip()}"
+                    print(messaggio)
+                    bot.send_message(chat_id=CHAT_ID, text=messaggio)
         else:
-            print(f"Errore nella connessione: {risposta.status_code}")
-            
+            print(f"Errore: {risposta.status_code}")
     except Exception as e:
-        print(f"Si è verificato un errore: {e}")
+        print(f"Errore nel bot: {e}")
 
-# Eseguiamo il controllo
 if __name__ == "__main__":
     while True:
         controlla_vinted()
-        print("Aspetto 1 ora prima del prossimo controllo...")
-        time.sleep(3600)  # Aspetta 3600 secondi (1 ora)
+        time.sleep(3600) # Aspetta 1 ora
